@@ -1,0 +1,134 @@
+---
+title: "EEMB 179/279 Final Project"
+author: "Marcus, Ale, and Emily"
+date: "2025-02-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Model from "Markov Chain Monte Carlo Analysis of Trophic Cascade in Yellowstone after Reintroduction of Wolves" - Johnson et al. 2015
+
+```{r}
+# Setting variables based on conference paper
+E0 = 1.67 * 10^(4)
+C0 = 80
+W0 = 21
+
+# Setting parameters based on conference paper
+kp1 = 0.467 
+pec = 7.88 * 10^(-3)
+pew = 7.16 * 10^(-3)
+kd1 = 0.4251
+kp2 = 2.56 * 10^(-4)
+kd2 = 4.96 * 10^(-7)
+kd3 = 2.81 * 10^(-7)
+kp3 = 0.015
+```
+
+```{r}
+# Checking inputs
+kp1
+pec
+pew
+kd1
+kp2
+kd2
+kd3
+kp3
+```
+
+Formulas below
+$$
+Elk\:\:population\:\:over\:\:time
+\newline
+\begin{aligned} \frac{dE}{dt} &= k_{p1} E - p_{ec} E C - p_{ew} E W\end{aligned}\\\
+\newline
+Coyote\:\:population\:\:over\:\:time
+\newline
+\begin{aligned} \frac{dC}{dt}&= -k_{d1} C + k_{p2} E C - k_{d2} C W\end{aligned}\\\
+\newline
+Wolf\:\:population\:\:over\:\:time
+\newline
+\begin{aligned} \frac{dW}{dt} &= -k_{d3} W + k_{p3}EW\end{aligned}
+$$
+
+```{r}
+# Setting storage variables
+tset <- seq(from = 0, to = 100, length.out = 20000)
+
+E.simu <- NaN*tset
+E.simu[1] <- E0
+
+C.simu <- NaN*tset
+C.simu[1] <- C0
+
+W.simu <- NaN*tset
+W.simu[1] <- W0
+```
+
+```{r}
+# Setting up our for loop for simulating population 
+
+for(i in 2:length(tset)){
+  dt <- tset[i] - tset[i-1] # Calculating dt
+  
+  # Assigning these for easier coding in the pop formulas 
+  E <- E.simu[i-1]
+  C <- C.simu[i-1]
+  W <- W.simu[i-1]
+  
+  # Calculating pop rate of change
+  dE <- (kp1*E - pec*E*C - pew*E*W)*dt
+  dC <- (-kd1*C + kp2*E*C - kd2*C*W)*dt
+  dW <- (-kd3*W + kp3*E*W)*dt
+  
+  # Calculating pop change
+  E.simu[i] <- E + dE
+  C.simu[i] <- C + dC
+  W.simu[i] <- W + dW
+}
+```
+
+```{r}
+# Checking that the start and end of the simulations looks logical
+head(E.simu)
+tail(E.simu)
+
+head(C.simu)
+tail(C.simu)
+
+head(W.simu)
+tail(W.simu)
+```
+
+```{r}
+# Setting variable colors for plots
+Ecol <- 'deepskyblue'
+Ccol <- 'firebrick2'
+Wcol <- 'springgreen3'
+```
+
+```{r}
+# Setting variable colors for plots
+plot(x = tset, y = E.simu,
+     type = 'l', 
+     col = Ecol, 
+     las = 1, 
+     lwd = 2, 
+     xlab = 'Time', ylab = 'Number of Individuals')
+
+lines(x = tset, y = C.simu, col = Ccol, lwd = 2)
+
+lines(x = tset, y = W.simu, col = Wcol, lwd = 2)
+
+abline(h=0)
+
+legend(x = max(tset)*0.1, y = 0.8*E0, 
+       lwd = 2, 
+       legend = c('Elk pop.', 'Coyote pop.', 'Wolf pop.'),
+       col = c(Ecol, Ccol, Wcol), 
+       horiz = TRUE)
+```
