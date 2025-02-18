@@ -132,3 +132,51 @@ legend(x = max(tset)*0.1, y = 0.8*E0,
        col = c(Ecol, Ccol, Wcol), 
        horiz = TRUE)
 ```
+
+```{r}
+# ylim at 100
+# Setting variable colors for plots
+plot(x = tset, y = E.simu,
+     type = 'l', 
+     col = Ecol, 
+     las = 1, 
+     lwd = 2, 
+     ylim = c(0,100),
+     xlab = 'Time', ylab = 'Number of Individuals')
+
+lines(x = tset, y = C.simu, col = Ccol, lwd = 2)
+
+lines(x = tset, y = W.simu, col = Wcol, lwd = 2)
+
+abline(h=0)
+
+legend(x = max(tset)*0.1, y = 0.8*E0, 
+       lwd = 2, 
+       legend = c('Elk pop.', 'Coyote pop.', 'Wolf pop.'),
+       col = c(Ecol, Ccol, Wcol), 
+       horiz = TRUE)
+```
+
+```{r}
+# xlim at 1
+# Setting variable colors for plots
+plot(x = tset, y = E.simu,
+     type = 'l', 
+     col = Ecol, 
+     las = 1, 
+     lwd = 2, 
+     xlim = c(0,1),
+     xlab = 'Time', ylab = 'Number of Individuals')
+
+lines(x = tset, y = C.simu, col = Ccol, lwd = 2)
+
+lines(x = tset, y = W.simu, col = Wcol, lwd = 2)
+
+abline(h=0)
+
+legend(x = max(tset)*0.1, y = 0.8*E0, 
+       lwd = 2, 
+       legend = c('Elk pop.', 'Coyote pop.', 'Wolf pop.'),
+       col = c(Ecol, Ccol, Wcol), 
+       horiz = TRUE)
+```
