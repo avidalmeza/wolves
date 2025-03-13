@@ -1,0 +1,207 @@
+---
+title: "Reintroduction of Wolves in Yellowstone"
+author: "Marcus Varni, Ale Vidal Meza, and Emily Sorenson"
+date: "2025-02-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Johnson et al. (2015) revised the Lotka-Volterra predator-prey model:
+$$
+Elk\:\:population\:\:over\:\:time
+\newline
+\begin{aligned} \frac{dE}{dt} &= k_{p1} E - p_{ec} E C - p_{ew} E W\end{aligned}\\\
+\newline
+Coyote\:\:population\:\:over\:\:time
+\newline
+\begin{aligned} \frac{dC}{dt}&= -k_{d1} C + k_{p2} E C - k_{d2} C W\end{aligned}\\\
+\newline
+Wolf\:\:population\:\:over\:\:time
+\newline
+\begin{aligned} \frac{dW}{dt} &= -k_{d3} W + k_{p3}EW\end{aligned}
+$$
+```{r}
+# Set variable colors for plots
+ Ecol <- "#219ebc"
+ Ccol <- "#d62828"
+ Wcol <- "#6a994e"
+```
+
+```{r}
+# Set variables based on conference paper
+E0 <- 500#1.67 * (10^(4)) # Define initial elk population
+C0 <- 200 # Define initial coyote population
+W0 <- 200 # Define initial wolf population
+
+# Set parameters based on conference paper
+kp1 <- 0.467  # Define elk growth rate
+pec <- 0.001#0.0788  # Define predation rate of coyotes on elk
+pew <- pec#0.001  # Define predation rate of wolves on elk
+kd1 <- 0.04251 # Define natural decay of coyotes given lack of food
+kp2 <- 0.1*pec  # Define proliferation rate of coyotes
+kd2 <- 0.0005#4.96  # Define hostile incidents between wolves and coyotes since reintroduction
+kd3 <- kd1#0.0281  # Define natural decay rate of wolves 
+kp3 <- 0.1*pew # Define proliferation rate of wolves given sustenance
+
+
+# Create time vector of length 100000
+tset <- seq(from = 0, to = 200, by = .001)
+
+E.simu <- NaN*tset # Create empty holding vector
+E.simu[1] <- E0 # Store initial population value in vector
+
+C.simu <- NaN*tset # Create empty holding vector
+C.simu[1] <- C0 # Store initial population value in vector
+
+W.simu <- NaN*tset # Create empty holding vector
+W.simu[1] <- W0 # Store initial population value in vector
+
+# Initiate for loop, start in second slot due to initial condition
+for(i in 2:length(tset)){
+  dt <- tset[i] - tset[i-1] # Find change in time
+  
+  # Assign temporary population variables
+  E <- E.simu[i-1] # Extract number of elk at previous timestep
+  C <- C.simu[i-1] # Extract number of coyote at previous timestep
+  W <- W.simu[i-1] # Extract number of wolves at previous timestep
+  
+  # Calculate population rate of change
+  dE <- ((kp1*E) + (-pec*E*C) + (-pew*E*W)) * dt # Find elk population over time
+  dC <- ((-kd1*C) + (kp2*E*C) + (-kd2*C*W)) * dt # Find coyote population over time
+  dW <- ((-kd3*W) + (kp3*E*W)) * dt # Find wolf population over time
+  
+  # Calculate population change
+  E.simu[i] <- E + dE # Current elk population at timestep
+  C.simu[i] <- C + dC # Current coyote population at timestep
+  W.simu[i] <- W + dW # Current wolf population at timestep
+}
+
+# Plot N as a function of time
+plot(x = tset, # Add time vector to x axis
+     y = E.simu, # Add elk population size to y axis
+     type = "l", # Set type to "Lines"
+     col = Ecol, # Specify line color
+     las = 1, # Change orientation of tick marks to be horizontal
+     lwd = 2, # Set line width to 2
+     ylim = c(min(c(E.simu,C.simu,W.simu),na.rm=T),max(c(E.simu,C.simu,W.simu),na.rm = T)),
+     xlab = "Time", # Set x axis label
+     ylab = "Number of Individuals") # Set y axis label,
+lines(x = tset, # Add time vector to x axis
+      y = C.simu, # Add coyote population size to y axis
+      col = Ccol, # Specify line color
+      lwd = 2) # Set line width to 2
+lines(x = tset, # Add time vector to x axis
+      y = W.simu, # Add wolf population size to y axis
+      col = Wcol, # Specify line color
+      lwd = 2) # Set line width to 2
+abline(h = 0) # Add horizontal line at x = 0
+legend(x = 'topleft',inset=c(0,0), # Set legend position
+       lwd = 2, # Set line width to 2
+       legend = c("Elk pop.", "Coyote pop.", "Wolf pop."), # Set item labels
+       col = c(Ecol, Ccol, Wcol), # Set item colors
+       horiz = TRUE) # Set legend vertically
+```
+
+```{r}
+# Check start/end values of the simulations
+head(E.simu)
+tail(E.simu)
+
+head(C.simu)
+tail(C.simu)
+
+head(W.simu)
+tail(W.simu)
+```
+
+
+
+
+
+```{r}
+##Bifurcation diagram
+
+## a. Selecting the x-axis for our bifurcation diagram
+kd2_set <- seq(from = 0, to = 100, by = 50) 
+
+## b. Calculating the equilibrium points for each value of Y
+
+
+## Storage variables for our two state variables of interest. 
+
+Estarset <- NaN*kd2_set # holding vector for equilibrium prey population size corresponding to each value of Y in Yset 
+Cstarset <- NaN*kd2_set # holding vector for equilibrium prey population size corresponding to each value of Y in Yset 
+Wstarset <- NaN*kd2_set # holding vector for equilibrium prey population size corresponding to each value of Y in Yset 
+### For loop
+
+for(j in 1:length(kd2_set)){ # for each element j from 1 to the length of Yset
+  # assign the value of Y
+	kd2 <- kd2_set[j] # set Y equal to the jth element of Yset
+	
+	# now simulate the model with this value of Y:
+	# create holding vectors for predator and prey populations and fill in initial conditions
+	E.simu <- NaN*tset # holding vector for the prey population 
+	E.simu[1] <- 1 # fill in initial prey size
+	C.simu <- NaN*tset # holding vector for the predator population
+	C.simu[1] <- 1 # fill in initial predator size
+	W.simu <- NaN*tset # holding vector for the predator population
+	W.simu[1] <- 1 # fill in initial predator size
+	
+	for(i in 2:length(tset)){ # for each element i from 2 to length of tset
+	  # calculating change in time
+		dt <- tset[i]-tset[i-1]
+		
+		# storing temporary variables
+		E <- E.simu[i-1] # call the prey population size at the previous timepoint X
+		C <- C.simu[i-1] # call the predator population size at the previous timepoint X
+		W <- W.simu[i-1]
+		
+		 # Calculate population rate of change
+  dE <- ((kp1*E) + (-pec*E*C) + (-pew*E*W)) * dt # Find elk population over time
+  dC <- ((-kd1*C) + (kp2*E*C) + (-kd2*C*W)) * dt # Find coyote population over time
+  dW <- ((-kd3*W) + (kp3*E*W)) * dt # Find wolf population over time
+		
+		 # Calculate population change
+  E.simu[i] <- E + dE # Current elk population at timestep
+  C.simu[i] <- C + dC # Current coyote population at timestep
+  W.simu[i] <- W + dW # Current wolf population at timestep
+		
+	} # end of model simulation
+	
+	# storing last population size (equilibrium population size) in holding the "starset" holding vectors
+	Estarset[j] <- E.simu[length(tset)] # prey population size at the end of the simulation with Y = Yset[j]
+	Cstarset[j] <- C.simu[length(tset)] # predator population size at the end of the simulation with Y = Yset[j]
+	Wstarset[j] <- W.simu[length(tset)] # predator population size at the end of the simulation with Y = Yset[j]
+	
+}# end of our outer for loop that iterates over each element in kd2_set
+
+## c. Examining the results
+
+## We can now make bifurcation diagrams for both X and P.
+
+# plot stable equilibria of predator (Pstarset) against density of alternate prey (Yset)
+plot(x = kd2_set, y = Estarset, # x = density of alternate prey, y = equilibrium predator population size
+     type = 'l', lwd = 2, col = Ecol, las = 1, # plot aesthetics
+     xlab = 'Hostile Incidence Between Wolves and Coyotes, kd2', ylab = 'Stable equilibria of elk, E*') # axis labels
+
+# plot stable equilibria of prey (Xstarset) against density of alternate prey (Yset)
+plot(x = kd2_set, y = Cstarset, # x = density of alternate prey, y = equilibrium prey population size
+     type = 'l', lwd = 2, col = Ccol, las = 1, # plot aesthetics
+     xlab = 'Hostile Incidence Between Wolves and Coyotes, kd2', ylab = 'Stable equilibria of coyotes, C*')# axis labels
+
+# plot stable equilibria of prey (Xstarset) against density of alternate prey (Yset)
+plot(x = kd2_set, y = Wstarset, # x = density of alternate prey, y = equilibrium prey population size
+     type = 'l', lwd = 2, col = Wcol, las = 1, # plot aesthetics
+     xlab = 'Hostile Incidence Between Wolves and Coyotes, kd2', ylab = 'Stable equilibria of Wolves, W*')# axis labels
+```
+
+```{r}
+# xlim at 1
+head(Estarset)
+tail(Estarset)
+```
+
+Based on simulated results published by Johnson et al. (2015), we expected to see a rise in the wolf population from 1995-2006 and a plateau around 2007-2030; an exponential decline in the coyote population from 1995 to 2003 and onwards; and a decline in the elk population over time from 1995 to 2008 and onwards. However, our plotted time series based on the initial population and parameter values published led to signficantly different results.
