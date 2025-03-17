@@ -1,5 +1,5 @@
 ---
-title: "The Reintroduction of Wolves in Yellowstone: A Multi-Predator Lokta-Volterra Model"
+title: "The Reintroduction of Wolves in Yellowstone: A Multi-Predator Model"
 author: "Marcus Varni, Alessandra Vidal Meza, and Emily Sorenson"
 date: "2025-03-18"
 output: html_document
@@ -38,13 +38,13 @@ table <- tibble(
             "Fraction of elk per coyote per year", "Fraction of elk per wolf per year",
             "Fraction of coyotes per year", "Coyotes per year", "Incidents per year",
             "Fraction of wolves per year", "Wolves per year"),
-  Johnson.Value = c("21", "1.67x10^4", "80", "0.467", "7.88 × 10^−3", "7.16 × 10^−3", "0.4251", 
+  Johnson.et.al.Value = c("21", "1.67x10^4", "80", "0.467", "7.88 × 10^−3", "7.16 × 10^−3", "0.4251", 
                     "2.56 × 10^−4", "4.96 × 10^−7", "2.81 ×10^−7", "0.015"),
-  Modified.Value = c("200", "500", "200", NA, "0.001", "0.001", NA, "0.0001", "0.0005", "0.4251", "0.0001"))
+  Modified.Value = c("200", "500", "200", NA, "0.001", "0.001", NA, "0.0001", "0.0005", "0.04251", "0.0001"))
 
 table %>%
   kbl(col.names = gsub("[.]", " ", names(table)),
-      caption = "Table 1. Description of variables and parameters in model with modified values.") %>%
+      caption = "Table 1. Summary of variables and parameters with modified values.") %>%
   kable_styling()
 ```
 
@@ -57,8 +57,8 @@ W0 <- 200 # Define initial wolf population
 # Set parameters based on conference paper
 kp1 <- 0.467  # Define elk growth rate
 pec <- 0.001 # Define predation rate of coyotes on elk
-pew <- pec # 7.16 * (10^(-3)) # Define predation rate of wolves on elk
-kd1 <- 0.4251 # Define natural decay of coyotes given lack of food
+pew <- pec # Define predation rate of wolves on elk
+kd1 <- 0.04251 # Define natural decay of coyotes given lack of food
 kp2 <- 0.1*pec # Define proliferation rate of coyotes
 kd2 <- 0.0005 # Define hostile incidents between wolves and coyotes since reintroduction
 kd3 <- kd1 # Define natural decay rate of wolves 
@@ -83,11 +83,11 @@ Ccol <- "#d62828"
 Wcol <- "#6a994e"
 ```
 
-## Time Series
+## Time Series Simulation
 
 ```{r}
-# Create time vector of length 100000
-tset <- seq(from = 0, to = 200, length.out = .001)
+# Create time vector from 0 to 200 with timesteps at .001 point
+tset <- seq(from = 0, to = 200, by = .001)
 
 E.simu <- NaN*tset # Create empty holding vector
 E.simu[1] <- E0 # Store initial population value in vector
@@ -109,10 +109,10 @@ for(i in 2:length(tset)){
   C <- C.simu[i-1] # Extract number of coyote at previous timestep
   W <- W.simu[i-1] # Extract number of wolves at previous timestep
   
-  # Calculate population rate of change
-  dE <- ((kp1*E) + (-pec*E*C) + (-pew*E*W)) * dt # Find elk population over time
-  dC <- ((-kd1*C) + (kp2*E*C) + (-kd2*C*W)) * dt # Find coyote population over time
-  dW <- ((-kd3*W) + (kp3*E*W)) * dt # Find wolf population over time
+  # Calculate change in population size
+	dE <- ((kp1*E) + (-pec*E*C) + (-pew*E*W)) * dt # Change in elk population size over dt
+	dC <- ((-kd1*C) + (kp2*E*C) + (-kd2*C*W)) * dt # Change in coyotes population size over dt
+	dW <- ((-kd3*W) + (kp3*E*W)) * dt # Change in wolves population size over dt
   
   # Calculate population change
   E.simu[i] <- E + dE # Current elk population at timestep
@@ -143,6 +143,8 @@ plot(x = tset, # Add time vector to x axis
      lwd = 2, # Set line width to 2
      ylim = c(min(c(E.simu, C.simu, W.simu), na.rm = T),
              max(c(E.simu, C.simu, W.simu), na.rm = T)), # Set y axis limit
+     main = "Multi-Predator Interactions in Yellowstone National Park", # Set main title
+     sub = "Time Series Simulation Adapted from Johnson et al. (2015) for Wolf Reintroduction in 1995",
      xlab = "Time", # Set x axis label
      ylab = "Number of Individuals") # Set y axis label,
 lines(x = tset, # Add time vector to x axis
@@ -154,32 +156,114 @@ lines(x = tset, # Add time vector to x axis
       col = Wcol, # Specify line color
       lwd = 2) # Set line width to 2
 abline(h = 0) # Add horizontal line at x = 0
-legend(x = "topleft", inset = c(0,0), # Set legend position
+legend(x = "topright", # Set legend position
        lwd = 2, # Set line width to 2
        legend = c("Elk pop.", "Coyote pop.", "Wolf pop."), # Set item labels
        col = c(Ecol, Ccol, Wcol), # Set item colors
        horiz = TRUE) # Set legend vertically
 ```
 
-## Bifurcation Diagram
+## Bifurcation Diagrams 
+### Predation Rate of Wolves on Elk
 
 ```{r}
-# Create x axis vector of range of `kd2` values to bifurcate 
-kd2_set <- seq(from = 0, to = 100, by = 50) 
+# Create x axis vector of range of `pew` values to bifurcate 
+pew_set <- seq(from = 0, to = 30, by = 0.5) 
 
 # Create empty holding vectors for state variables to store equilibrium population sizes 
-Estarset <- NaN*kd2_set # NaN vector of vector length kd2_set to store elk population size
-Cstarset <- NaN*kd2_set # NaN vector of vector length kd2_set to store coyote population size
-Wstarset <- NaN*kd2_set # NaN vector of vector length kd2_set to store wolf population size
+Estarset <- NaN*pew_set # NaN vector of vector length pew_set to store elk population size
+Cstarset <- NaN*pew_set # NaN vector of vector length pew_set to store coyote population size
+Wstarset <- NaN*pew_set # NaN vector of vector length pew_set to store wolf population size
 ```
 
 ```{r}
-## Calculate equilibrium values for each value of kd2 in `kd2_set` ##
-for(j in 1:length(kd2_set)){ # Iterate over number of items given by length of kd2_set; start outer for loop
+## Calculate equilibrium values for each value of pew in `pew_set` ##
+for(j in 1:length(pew_set)){ # Iterate over number of items given by length of pew_set; start outer for loop
 
-	kd2 <- kd2_set[j] # Assign jth element of kd2_set to kd2
+	# pew <- pew_set[j] # Assign jth element of pew_set to pew
+	pew <- pew_set[j]
 	
-	## Simulate model for jth element of kd2_set ##
+	## Simulate model for jth element of pew_set ##
+	
+	# Set initial condition
+	E.simu <- NaN*tset # Create NaN holding vector for elk population
+	E.simu[1] <- 1 # Set initial elk population size 
+	C.simu <- NaN*tset # Create NaN holding vector for coyotes population
+	C.simu[1] <- 1 # Set initial coyote population size 
+	W.simu <- NaN*tset # Create NaN holding vector for wolves population
+	W.simu[1] <- 1 # Set initial wolves population size 
+	
+	# Initiate for loop, start in second slot due to initial condition; start inner for loop
+	for(i in 2:length(tset)){
+	  
+	  dt <- tset[i]-tset[i-1] # Change in time; timestep
+		
+		# Create temporary variable from previous timestep
+		E <- E.simu[i-1] # Set elk population size at previous timestep
+		C <- C.simu[i-1] # Set coyotes population size at previous timestep
+		W <- W.simu[i-1] # Set wolves population size at previous timestep
+		
+		# Calculate change in population size
+		dE <- ((kp1*E) + (-pec*E*C) + (-pew*E*W)) * dt # Change in elk population size over dt
+		dC <- ((-kd1*C) + (kp2*E*C) + (-kd2*C*W)) * dt # Change in coyotes population size over dt
+		dW <- ((-kd3*W) + (kp3*E*W)) * dt # Change in wolves population size over dt
+		
+		# Calculate total population size
+		E.simu[i] <- E + dE # Current elk population size at ith timestep
+		C.simu[i] <- C + dC # Current coyotes population size at ith timestep
+		W.simu[i] <- W + dW # Current wolves population size at ith timestep
+		
+		} # End of inner for loop
+	
+	# Store last population size (equilibrium population size where pew = pew_set[j])
+	Estarset[j] <- E.simu[length(tset)] # Extract and store elk population size at end of simulation
+	Cstarset[j] <- C.simu[length(tset)] # Extract and store coyotes population size at end of simulation
+	Wstarset[j] <- W.simu[length(tset)] # Extract and store wolves population size at end of simulation
+	
+} # End of outer foor loop
+```
+
+```{r}
+# Plot stable equilibria of elk population against predation rate of wolves on elk (pew_set)
+plot(x = pew_set, # Add pew_set vector to x axis
+     y = Estarset, # Add equilibrium elk population size to y axis
+     type = "l", # Set type to "Lines"
+     lwd = 2, # Set line width to 2
+     col = Ecol, # Set line color
+     las = 1, # Change orientation of tick marks to be horizontal
+     xlab = "Predation Rate of Wolves on Elk, pew", # Set x axis label
+     ylab = "Stable equilibria of elk, E*") # Set y axis label
+# Plot stable equilibria of wolves population against predation rate of wolves on elk (pew_set)
+plot(x = pew_set, # Add pew_set vector to x axis
+     y = Wstarset, # Add equilibrium wolves population size to y axis
+     type = "l", # Set type to "Lines"
+     lwd = 2, # Set line width to 2
+     col = Wcol, # Set line color
+     las = 1, # Change orientation of tick marks to be horizontal
+     xlab = "Predation Rate of Wolves on Elk, pew", # Set x axis label
+     ylab = "Stable equilibria of wolves, W*") # Set y axis label
+```
+
+### Growth Rate of Elk
+
+```{r}
+# Create x axis vector of range of `kp1` values to bifurcate 
+kp1_set <- seq(from = 0, to = 25, by = 0.05) 
+
+# Create empty holding vectors for state variables to store equilibrium population sizes 
+Estarset <- NaN*kp1_set # NaN vector of vector length kp1_set to store elk population size
+Cstarset <- NaN*kp1_set # NaN vector of vector length kp1_set to store coyote population size
+Wstarset <- NaN*kp1_set # NaN vector of vector length kp1_set to store wolf population size
+```
+
+```{r}
+## Calculate equilibrium values for each value of kp1 in `kp1_set` ##
+for(j in 1:length(kp1_set)){ # Iterate over number of items given by length of kp1_set; start outer for loop
+
+	# kp1 <- kp1_set[j] # Assign jth element of kp1_set to kp1
+	kp1 <- kp1_set[j]
+	
+	## Simulate model for jth element of kp1_set ##
 	
 	# Set initial condition
 	E.simu <- NaN*tset # Create NaN holding vector for elk population
@@ -216,36 +300,26 @@ for(j in 1:length(kd2_set)){ # Iterate over number of items given by length of k
 	Cstarset[j] <- C.simu[length(tset)] # Extract and store coyotes population size at end of simulation
 	Wstarset[j] <- W.simu[length(tset)] # Extract and store wolves population size at end of simulation
 	
-} # End of outer foor loop
+} # End of outer for loop
 ```
 
 ```{r}
-# Plot stable equilibria of elk population against hostile incidence between wolves and coyotes (kd2_set)
-plot(x = kd2_set, # Add kd2_set vector to x axis
+# Plot stable equilibria of elk population against growth rate of elk (kp1_set)
+plot(x = kp1_set, # Add kp1_set vector to x axis
      y = Estarset, # Add equilibrium elk population size to y axis
      type = "l", # Set type to "Lines"
      lwd = 2, # Set line width to 2
      col = Ecol, # Set line color
      las = 1, # Change orientation of tick marks to be horizontal
-     xlab = "Hostile Incidence Between Wolves and Coyotes, kd2", # Set x axis label
+     xlab = "Growth Rate of Elk, kp1", # Set x axis label
      ylab = "Stable equilibria of elk, E*") # Set y axis label
-# Plot stable equilibria of coyotes population against hostile incidence between wolves and coyotes (kd2_set)
-plot(x = kd2_set, # Add kd2_set vector to x axis
-     y = Cstarset, # Add equilibrium coyotes population size to y axis
-     type = "l", # Set type to "Lines"
-     lwd = 2, # Set line width to 2
-     col = Ccol, # Set line color
-     las = 1, # Change orientation of tick marks to be horizontal
-     xlab = "Hostile Incidence Between Wolves and Coyotes, kd2", # Set x axis label
-     ylab = "Stable equilibria of coyotes, C*") # Set y axis label
-# Plot stable equilibria of wolves population against hostile incidence between wolves and coyotes (kd2_set)
-plot(x = kd2_set, # Add kd2_set vector to x axis
+# Plot stable equilibria of wolves population against growth rate of elk (kp1_set)
+plot(x = kp1_set, # Add kp1_set vector to x axis
      y = Wstarset, # Add equilibrium wolves population size to y axis
      type = "l", # Set type to "Lines"
      lwd = 2, # Set line width to 2
      col = Wcol, # Set line color
      las = 1, # Change orientation of tick marks to be horizontal
-     xlab = "Hostile Incidence Between Wolves and Coyotes, kd2", # Set x axis label
+     xlab = "Growth Rate of Elk, kp1", # Set x axis label
      ylab = "Stable equilibria of wolves, W*") # Set y axis label
 ```
-
