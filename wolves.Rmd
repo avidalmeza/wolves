@@ -11,22 +11,31 @@ library(kableExtra)
 library(tidyverse)
 ```
 
-Johnson et al. (2015) proposed the Lotka-Volterra predator-prey model:
+## Background
+
+Trophic cascades refer to the indirect effects of the addition or removal of a top predator in an ecosystem or food web. In 1926, grey wolves (Canis lupus) were eradicated from Yellowstone National Park (YNP) after decades of livestock conflict with westward settlers, leading to an ecosystem collapse (History of Wolf Management in Yellowstone National Park, 2025). The reintroduction of wolves into YNP in 1995 is an emblematic case of successful restoration, which resulted in a trophic cascade and reinstated top-down control of herbivory in the park. Without a primary predator, the Rocky Mountain elk (Cervus canadensis) population had exploded into an almost exponential growth and exerted herbivory pressure on woody plants like willows and aspens from overgrazing (Ripple & Beschta, 2012). Similarly, the eradication of wolves in the park was linked to the expansion and increased abundance of coyotes (Canis latrans) (Ripple et al., 2013). Coyotes are a mesopredator and scavenger species that often feeds on wolf-killed ungulate carcasses. Coyotes are typically suppressed by wolves and occur at low densities across wolf-dominated landscapes (Merkle et al., 2009; Ripple et al., 2013).
+
+Several mathematical biological models have been constructed in an attempt to better understand trophic cascades in large and complex ecosystems like YNP and inform future management. In a conference paper published by Johnson et al. (2015), a mathematical biology model based on the Lotka-Volterra predation model is proposed to describe multi-predator dynamics and capture the interactions between elk, wolves, and coyotes in YNP. The authors novely perform a Markov Chain Monte Carlo (MCMC) analysis and apply a Metropolis-Hastings algorithm to calibrate the model parameters based on field observations. We present and discuss this model further here. 
+
+## Model Set Up
+
+Johnson et al. (2015) proposed the following predator-prey model:
+
+**Elk population over time**:
+
 $$
-Elk\:\:population\:\:over\:\:time
-\newline
 \begin{aligned} \frac{dE}{dt} &= k_{p1} E - p_{ec} E C - p_{ew} E W\end{aligned}\\\
-\newline
-Coyote\:\:population\:\:over\:\:time
-\newline
+$$
+**Coyote population over time**: 
+$$
 \begin{aligned} \frac{dC}{dt}&= -k_{d1} C + k_{p2} E C - k_{d2} C W\end{aligned}\\\
-\newline
-Wolf\:\:population\:\:over\:\:time
-\newline
+$$
+**Wolf population over time**:
+$$
 \begin{aligned} \frac{dW}{dt} &= -k_{d3} W + k_{p3}EW\end{aligned}
 $$
 
-```{r}
+```{r echo=FALSE}
 table <- tibble(
   Variables.And.Parameters = c("W", "E", "C", "kp1", "pec", "pew", "kd1", "kp2", "kd2", "kd3", "kp3"), 
   Description = c("Wolf population", "Elk population", "Coyote population", "Growth rate of elk",
@@ -76,9 +85,10 @@ kd2 # View hostile incidents between wolves and coyotes since reintroduction
 kd3 # View natural decay rate of wolves 
 kp3 # View proliferation rate of wolves given sustenance
 ```
+
 ```{r}
 # Set variable colors for plots
-Ecol <- "#219ebc"
+Ecol <- "#219ebc" 
 Ccol <- "#d62828"
 Wcol <- "#6a994e"
 ```
@@ -162,18 +172,33 @@ legend(x = "topright", # Set legend position
        col = c(Ecol, Ccol, Wcol), # Set item colors
        horiz = TRUE) # Set legend vertically
 ```
+```{r}
+max_E.simu <- max(E.simu[(length(E.simu)/2):(length(E.simu))])
+max_E.simu
 
-## Bifurcation Diagrams 
+min_E.simu <- min(E.simu[(length(E.simu)/2):(length(E.simu))])
+min_E.simu
+
+max_W.simu <- max(W.simu[(length(W.simu)/2):(length(W.simu))])
+max_W.simu
+
+min_W.simu <- min(W.simu[(length(W.simu)/2):(length(W.simu))])
+min_W.simu
+```
+
+## Hopf Bifurcation Diagrams 
+
 ### Predation Rate of Wolves on Elk
 
 ```{r}
 # Create x axis vector of range of `pew` values to bifurcate 
 pew_set <- seq(from = 0, to = 30, by = 0.5) 
 
-# Create empty holding vectors for state variables to store equilibrium population sizes 
-Estarset <- NaN*pew_set # NaN vector of vector length pew_set to store elk population size
-Cstarset <- NaN*pew_set # NaN vector of vector length pew_set to store coyote population size
-Wstarset <- NaN*pew_set # NaN vector of vector length pew_set to store wolf population size
+# Create empty holding vectors for state variables to store min/max population sizes 
+min_E.starset <- NaN*pew_set # NaN vector of vector length pew_set to store min elk population size
+max_E.starset <- NaN*pew_set # NaN vector of vector length pew_set to store max elk population size
+min_W.starset <- NaN*pew_set # NaN vector of vector length pew_set to store min wolf population size
+max_W.starset <- NaN*pew_set # NaN vector of vector length pew_set to store max wolf population size
 ```
 
 ```{r}
@@ -215,33 +240,59 @@ for(j in 1:length(pew_set)){ # Iterate over number of items given by length of p
 		
 		} # End of inner for loop
 	
-	# Store last population size (equilibrium population size where pew = pew_set[j])
-	Estarset[j] <- E.simu[length(tset)] # Extract and store elk population size at end of simulation
-	Cstarset[j] <- C.simu[length(tset)] # Extract and store coyotes population size at end of simulation
-	Wstarset[j] <- W.simu[length(tset)] # Extract and store wolves population size at end of simulation
+	# Store max/min population size for oscillation with stable asymptotic dynamics
+	max_E.starset[j] <- max(E.simu[(length(E.simu)/2):(length(E.simu))])
+	min_E.starset[j] <- min(E.simu[(length(E.simu)/2):(length(E.simu))])
+	max_W.starset[j] <- max(W.simu[(length(W.simu)/2):(length(W.simu))])
+	min_W.starset[j] <- min(W.simu[(length(W.simu)/2):(length(W.simu))])
 	
 } # End of outer foor loop
 ```
 
 ```{r}
-# Plot stable equilibria of elk population against predation rate of wolves on elk (pew_set)
+# Plot max value of elk population against predation rate of wolves on elk (pew_set)
 plot(x = pew_set, # Add pew_set vector to x axis
-     y = Estarset, # Add equilibrium elk population size to y axis
+     y = max_E.starset, # Add max elk population size to y axis
      type = "l", # Set type to "Lines"
      lwd = 2, # Set line width to 2
      col = Ecol, # Set line color
      las = 1, # Change orientation of tick marks to be horizontal
+     main = "Bifurcation for State Variable, E", # Set main title
+     sub = "Time Series Simulation Adapted from Johnson et al. (2015) for Wolf Reintroduction in 1995",
      xlab = "Predation Rate of Wolves on Elk, pew", # Set x axis label
-     ylab = "Stable equilibria of elk, E*") # Set y axis label
-# Plot stable equilibria of wolves population against predation rate of wolves on elk (pew_set)
+     ylab = "Number of elk, E*") # Set y axis label
+# Plot min value of elk population against predation rate of wolves on elk (pew_set)
+lines(x = pew_set, # Add pew_set vector to x axiss
+      y = min_E.starset, # Add min elk population size to y axis
+      lwd = 2, # Set line width to 2
+      col = "#1d3557") # Specify line color
+legend("topright",  # Set legend position
+       legend = c("Max", "Min"), # Set item labels
+       lwd = 2, # Set line width to 2
+       lty = c(1, 1), # Set item line types
+       col = c(Ecol, "#1d3557")) # Set item colors
+
+# Plot max value of elk population against predation rate of wolves on elk (pew_set)
 plot(x = pew_set, # Add pew_set vector to x axis
-     y = Wstarset, # Add equilibrium wolves population size to y axis
+     y = max_W.starset, # Add max elk population size to y axis
      type = "l", # Set type to "Lines"
      lwd = 2, # Set line width to 2
      col = Wcol, # Set line color
      las = 1, # Change orientation of tick marks to be horizontal
+     main = "Bifurcation for State Variable, E", # Set main title
+     sub = "Time Series Simulation Adapted from Johnson et al. (2015) for Wolf Reintroduction in 1995",
      xlab = "Predation Rate of Wolves on Elk, pew", # Set x axis label
-     ylab = "Stable equilibria of wolves, W*") # Set y axis label
+     ylab = "Number of wolves, W*") # Set y axis label
+# Plot min value of elk population against predation rate of wolves on elk (pew_set)
+lines(x = pew_set, # Add pew_set vector to x axiss
+      y = min_W.starset, # Add min elk population size to y axis
+      lwd = 2, # Set line width to 2
+      col = "#a7c957") # Specify line color
+legend("topright",  # Set legend position
+       legend = c("Max", "Min"), # Set item labels
+       lwd = 2, # Set line width to 2
+       lty = c(1, 1), # Set item line types
+       col = c(Wcol, "#a7c957")) # Set item colors
 ```
 
 ### Growth Rate of Elk
@@ -250,10 +301,11 @@ plot(x = pew_set, # Add pew_set vector to x axis
 # Create x axis vector of range of `kp1` values to bifurcate 
 kp1_set <- seq(from = 0, to = 25, by = 0.05) 
 
-# Create empty holding vectors for state variables to store equilibrium population sizes 
-Estarset <- NaN*kp1_set # NaN vector of vector length kp1_set to store elk population size
-Cstarset <- NaN*kp1_set # NaN vector of vector length kp1_set to store coyote population size
-Wstarset <- NaN*kp1_set # NaN vector of vector length kp1_set to store wolf population size
+# Create empty holding vectors for state variables to store min/max population sizes 
+min_E.starset <- NaN*pew_set # NaN vector of vector length pew_set to store min elk population size
+max_E.starset <- NaN*pew_set # NaN vector of vector length pew_set to store max elk population size
+min_W.starset <- NaN*pew_set # NaN vector of vector length pew_set to store min wolf population size
+max_W.starset <- NaN*pew_set # NaN vector of vector length pew_set to store max wolf population size
 ```
 
 ```{r}
@@ -295,31 +347,74 @@ for(j in 1:length(kp1_set)){ # Iterate over number of items given by length of k
 		
 		} # End of inner for loop
 	
-	# Store last population size (equilibrium population size where kd2 = kd2_set[j])
-	Estarset[j] <- E.simu[length(tset)] # Extract and store elk population size at end of simulation
-	Cstarset[j] <- C.simu[length(tset)] # Extract and store coyotes population size at end of simulation
-	Wstarset[j] <- W.simu[length(tset)] # Extract and store wolves population size at end of simulation
+	# Store max/min population size for oscillation with stable asymptotic dynamics
+	max_E.starset[j] <- max(E.simu[(length(E.simu)/2):(length(E.simu))])
+	min_E.starset[j] <- min(E.simu[(length(E.simu)/2):(length(E.simu))])
+	max_W.starset[j] <- max(W.simu[(length(W.simu)/2):(length(W.simu))])
+	min_W.starset[j] <- min(W.simu[(length(W.simu)/2):(length(W.simu))])
 	
 } # End of outer for loop
 ```
 
 ```{r}
-# Plot stable equilibria of elk population against growth rate of elk (kp1_set)
-plot(x = kp1_set, # Add kp1_set vector to x axis
-     y = Estarset, # Add equilibrium elk population size to y axis
+# Plot max value of elk population against growth rate of elk (kp1_set)
+plot(x = kp1_set, # Add pew_set vector to x axis
+     y = max_E.starset, # Add max elk population size to y axis
      type = "l", # Set type to "Lines"
      lwd = 2, # Set line width to 2
      col = Ecol, # Set line color
      las = 1, # Change orientation of tick marks to be horizontal
+     main = "Bifurcation for State Variable, E", # Set main title
+     sub = "Time Series Simulation Adapted from Johnson et al. (2015) for Wolf Reintroduction in 1995",
      xlab = "Growth Rate of Elk, kp1", # Set x axis label
-     ylab = "Stable equilibria of elk, E*") # Set y axis label
-# Plot stable equilibria of wolves population against growth rate of elk (kp1_set)
-plot(x = kp1_set, # Add kp1_set vector to x axis
-     y = Wstarset, # Add equilibrium wolves population size to y axis
+     ylab = "Number of elk, E*") # Set y axis label
+# Plot min value of elk population against growth rate of elk (kp1_set)
+lines(x = kp1_set, # Add pew_set vector to x axiss
+      y = min_E.starset, # Add min elk population size to y axis
+      lwd = 2, # Set line width to 2
+      col = "#1d3557") # Specify line color
+legend("topright",  # Set legend position
+       legend = c("Max", "Min"), # Set item labels
+       lwd = 2, # Set line width to 2
+       lty = c(1, 1), # Set item line types
+       col = c(Ecol, "#1d3557")) # Set item colors
+
+# Plot max value of elk population against growth rate of elk (kp1_set)
+plot(x = kp1_set, # Add pew_set vector to x axis
+     y = max_W.starset, # Add max elk population size to y axis
      type = "l", # Set type to "Lines"
      lwd = 2, # Set line width to 2
      col = Wcol, # Set line color
      las = 1, # Change orientation of tick marks to be horizontal
+     main = "Bifurcation for State Variable, E", # Set main title
+     sub = "Time Series Simulation Adapted from Johnson et al. (2015) for Wolf Reintroduction in 1995",
      xlab = "Growth Rate of Elk, kp1", # Set x axis label
-     ylab = "Stable equilibria of wolves, W*") # Set y axis label
+     ylab = "Number of wolves, W*") # Set y axis label
+# Plot min value of elk population against growth rate of elk (kp1_set)
+lines(x = kp1_set, # Add pew_set vector to x axiss
+      y = min_W.starset, # Add min elk population size to y axis
+      lwd = 2, # Set line width to 2
+      col = "#a7c957") # Specify line color
+legend("topleft",  # Set legend position
+       legend = c("Max", "Min"), # Set item labels
+       lwd = 2, # Set line width to 2
+       lty = c(1, 1), # Set item line types
+       col = c(Wcol, "#a7c957")) # Set item colors
+```
+
+## Phase Diagram
+```{r}
+plot(x = W.simu, # Add kp1_set vector to x axis
+     y = E.simu, # Add equilibrium elk population size to y axis
+     type = "l", # Set type to "Lines"
+     lwd = 2, # Set line width to 2
+     col = 'aquamarine3', # Set line color
+     las = 1, # Change orientation of tick marks to be horizontal
+     xlim = c(min(c(E.simu, W.simu), na.rm = T),
+             max(c(E.simu, W.simu), na.rm = T)),
+     ylim = c(min(c(E.simu, W.simu), na.rm = T),
+             max(c(E.simu, W.simu), na.rm = T)),
+     xlab = "Elk Population", # Set x axis label
+     ylab = "Wolf Population", # Set y axis label
+     main = "Phase Diagram of Wolf Population vs Elk Population") # Set main title
 ```
