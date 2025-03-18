@@ -185,6 +185,22 @@ max_W.simu
 min_W.simu <- min(W.simu[(length(W.simu)/2):(length(W.simu))])
 min_W.simu
 ```
+## Phase Diagram
+```{r}
+plot(x = W.simu, # Add kp1_set vector to x axis
+     y = E.simu, # Add equilibrium elk population size to y axis
+     type = "l", # Set type to "Lines"
+     lwd = 2, # Set line width to 2
+     col = 'aquamarine3', # Set line color
+     las = 1, # Change orientation of tick marks to be horizontal
+     xlim = c(min(c(E.simu, W.simu), na.rm = T),
+             max(c(E.simu, W.simu), na.rm = T)),
+     ylim = c(min(c(E.simu, W.simu), na.rm = T),
+             max(c(E.simu, W.simu), na.rm = T)),
+     xlab = "Elk Population", # Set x axis label
+     ylab = "Wolf Population", # Set y axis label
+     main = "Phase Diagram of Wolf Population vs Elk Population") # Set main title
+```
 
 ## Hopf Bifurcation Diagrams 
 
@@ -400,21 +416,4 @@ legend("topleft",  # Set legend position
        lwd = 2, # Set line width to 2
        lty = c(1, 1), # Set item line types
        col = c(Wcol, "#a7c957")) # Set item colors
-```
-
-## Phase Diagram
-```{r}
-plot(x = W.simu, # Add kp1_set vector to x axis
-     y = E.simu, # Add equilibrium elk population size to y axis
-     type = "l", # Set type to "Lines"
-     lwd = 2, # Set line width to 2
-     col = 'aquamarine3', # Set line color
-     las = 1, # Change orientation of tick marks to be horizontal
-     xlim = c(min(c(E.simu, W.simu), na.rm = T),
-             max(c(E.simu, W.simu), na.rm = T)),
-     ylim = c(min(c(E.simu, W.simu), na.rm = T),
-             max(c(E.simu, W.simu), na.rm = T)),
-     xlab = "Elk Population", # Set x axis label
-     ylab = "Wolf Population", # Set y axis label
-     main = "Phase Diagram of Wolf Population vs Elk Population") # Set main title
 ```
