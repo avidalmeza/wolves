@@ -74,7 +74,7 @@ kd3 <- kd1 # Define natural decay rate of wolves
 kp3 <- 0.1*pew # Define proliferation rate of wolves given sustenance
 ```
 
-```{r}
+```{r eval=FALSE}
 # Check inputs
 kp1 # View elk growth rate
 pec # View predation rate of coyotes on elk
@@ -173,17 +173,18 @@ legend(x = "topright", # Set legend position
        horiz = TRUE) # Set legend vertically
 ```
 ```{r}
-max_E.simu <- max(E.simu[(length(E.simu)/2):(length(E.simu))])
-max_E.simu
+# Extract min/max population size where system is in stable asymptotic dynamics
+max_E.simu <- max(E.simu[(length(E.simu)/2):(length(E.simu))]) # Extract max elk population size
+max_E.simu # View max elk population size
 
-min_E.simu <- min(E.simu[(length(E.simu)/2):(length(E.simu))])
-min_E.simu
+min_E.simu <- min(E.simu[(length(E.simu)/2):(length(E.simu))]) # Extract min elk population size
+min_E.simu # View min elk population size
 
-max_W.simu <- max(W.simu[(length(W.simu)/2):(length(W.simu))])
-max_W.simu
+max_W.simu <- max(W.simu[(length(W.simu)/2):(length(W.simu))]) # Extract max wolf population size
+max_W.simu # View max wolf population size
 
-min_W.simu <- min(W.simu[(length(W.simu)/2):(length(W.simu))])
-min_W.simu
+min_W.simu <- min(W.simu[(length(W.simu)/2):(length(W.simu))]) # Extract min wolf population size
+min_W.simu # View min wolf population size
 ```
 ## Phase Diagram
 ```{r}
@@ -191,12 +192,12 @@ plot(x = W.simu, # Add kp1_set vector to x axis
      y = E.simu, # Add equilibrium elk population size to y axis
      type = "l", # Set type to "Lines"
      lwd = 2, # Set line width to 2
-     col = 'aquamarine3', # Set line color
+     col = "aquamarine3", # Set line color
      las = 1, # Change orientation of tick marks to be horizontal
-     xlim = c(min(c(E.simu, W.simu), na.rm = T),
-             max(c(E.simu, W.simu), na.rm = T)),
-     ylim = c(min(c(E.simu, W.simu), na.rm = T),
-             max(c(E.simu, W.simu), na.rm = T)),
+     xlim = c(min(c(E.simu, W.simu), na.rm = T), # Set lower x limit
+             max(c(E.simu, W.simu), na.rm = T)), # Set upper x limit
+     ylim = c(min(c(E.simu, W.simu), na.rm = T), # Set lower y limit
+             max(c(E.simu, W.simu), na.rm = T)), # Set upper y limit
      xlab = "Elk Population", # Set x axis label
      ylab = "Wolf Population", # Set y axis label
      main = "Phase Diagram of Wolf Population vs Elk Population") # Set main title
@@ -256,7 +257,7 @@ for(j in 1:length(pew_set)){ # Iterate over number of items given by length of p
 		
 		} # End of inner for loop
 	
-	# Store max/min population size for oscillation with stable asymptotic dynamics
+	# Extract and store min/max population size where system is in stable asymptotic dynamics
 	max_E.starset[j] <- max(E.simu[(length(E.simu)/2):(length(E.simu))])
 	min_E.starset[j] <- min(E.simu[(length(E.simu)/2):(length(E.simu))])
 	max_W.starset[j] <- max(W.simu[(length(W.simu)/2):(length(W.simu))])
@@ -274,7 +275,7 @@ plot(x = pew_set, # Add pew_set vector to x axis
      col = Ecol, # Set line color
      las = 1, # Change orientation of tick marks to be horizontal
      main = "Bifurcation for State Variable, E", # Set main title
-     sub = "Time Series Simulation Adapted from Johnson et al. (2015) for Wolf Reintroduction in 1995",
+     sub = "Based on Simulation Adapted from Johnson et al. (2015) for Wolf Reintroduction in YNP",
      xlab = "Predation Rate of Wolves on Elk, pew", # Set x axis label
      ylab = "Number of elk, E*") # Set y axis label
 # Plot min value of elk population against predation rate of wolves on elk (pew_set)
@@ -283,7 +284,7 @@ lines(x = pew_set, # Add pew_set vector to x axiss
       lwd = 2, # Set line width to 2
       col = "#1d3557") # Specify line color
 legend("topright",  # Set legend position
-       legend = c("Max", "Min"), # Set item labels
+       legend = c("Max Equil.", "Min Equil."), # Set item labels
        lwd = 2, # Set line width to 2
        lty = c(1, 1), # Set item line types
        col = c(Ecol, "#1d3557")) # Set item colors
@@ -295,8 +296,8 @@ plot(x = pew_set, # Add pew_set vector to x axis
      lwd = 2, # Set line width to 2
      col = Wcol, # Set line color
      las = 1, # Change orientation of tick marks to be horizontal
-     main = "Bifurcation for State Variable, E", # Set main title
-     sub = "Time Series Simulation Adapted from Johnson et al. (2015) for Wolf Reintroduction in 1995",
+     main = "Bifurcation for State Variable, W", # Set main title
+     sub = "Based on Simulation Adapted from Johnson et al. (2015) for Wolf Reintroduction in YNP",
      xlab = "Predation Rate of Wolves on Elk, pew", # Set x axis label
      ylab = "Number of wolves, W*") # Set y axis label
 # Plot min value of elk population against predation rate of wolves on elk (pew_set)
@@ -305,7 +306,7 @@ lines(x = pew_set, # Add pew_set vector to x axiss
       lwd = 2, # Set line width to 2
       col = "#a7c957") # Specify line color
 legend("topright",  # Set legend position
-       legend = c("Max", "Min"), # Set item labels
+       legend = c("Max Equil.", "Min Equil."), # Set item labels
        lwd = 2, # Set line width to 2
        lty = c(1, 1), # Set item line types
        col = c(Wcol, "#a7c957")) # Set item colors
@@ -363,7 +364,7 @@ for(j in 1:length(kp1_set)){ # Iterate over number of items given by length of k
 		
 		} # End of inner for loop
 	
-	# Store max/min population size for oscillation with stable asymptotic dynamics
+	# Extract and store min/max population size where system is in stable asymptotic dynamics
 	max_E.starset[j] <- max(E.simu[(length(E.simu)/2):(length(E.simu))])
 	min_E.starset[j] <- min(E.simu[(length(E.simu)/2):(length(E.simu))])
 	max_W.starset[j] <- max(W.simu[(length(W.simu)/2):(length(W.simu))])
@@ -381,7 +382,7 @@ plot(x = kp1_set, # Add pew_set vector to x axis
      col = Ecol, # Set line color
      las = 1, # Change orientation of tick marks to be horizontal
      main = "Bifurcation for State Variable, E", # Set main title
-     sub = "Time Series Simulation Adapted from Johnson et al. (2015) for Wolf Reintroduction in 1995",
+     sub = "Based on Simulation Adapted from Johnson et al. (2015) for Wolf Reintroduction in YNP",
      xlab = "Growth Rate of Elk, kp1", # Set x axis label
      ylab = "Number of elk, E*") # Set y axis label
 # Plot min value of elk population against growth rate of elk (kp1_set)
@@ -390,7 +391,7 @@ lines(x = kp1_set, # Add pew_set vector to x axiss
       lwd = 2, # Set line width to 2
       col = "#1d3557") # Specify line color
 legend("topright",  # Set legend position
-       legend = c("Max", "Min"), # Set item labels
+       legend = c("Max Equil.", "Min Equil."), # Set item labels
        lwd = 2, # Set line width to 2
        lty = c(1, 1), # Set item line types
        col = c(Ecol, "#1d3557")) # Set item colors
@@ -402,8 +403,8 @@ plot(x = kp1_set, # Add pew_set vector to x axis
      lwd = 2, # Set line width to 2
      col = Wcol, # Set line color
      las = 1, # Change orientation of tick marks to be horizontal
-     main = "Bifurcation for State Variable, E", # Set main title
-     sub = "Time Series Simulation Adapted from Johnson et al. (2015) for Wolf Reintroduction in 1995",
+     main = "Bifurcation for State Variable, W", # Set main title
+     sub = "Based on Simulation Adapted from Johnson et al. (2015) for Wolf Reintroduction in YNP",
      xlab = "Growth Rate of Elk, kp1", # Set x axis label
      ylab = "Number of wolves, W*") # Set y axis label
 # Plot min value of elk population against growth rate of elk (kp1_set)
@@ -411,8 +412,8 @@ lines(x = kp1_set, # Add pew_set vector to x axiss
       y = min_W.starset, # Add min elk population size to y axis
       lwd = 2, # Set line width to 2
       col = "#a7c957") # Specify line color
-legend("topleft",  # Set legend position
-       legend = c("Max", "Min"), # Set item labels
+legend("bottomright",  # Set legend position
+       legend = c("Max Equil.", "Min Equil."), # Set item labels
        lwd = 2, # Set line width to 2
        lty = c(1, 1), # Set item line types
        col = c(Wcol, "#a7c957")) # Set item colors
